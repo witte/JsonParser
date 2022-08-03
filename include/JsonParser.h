@@ -1,27 +1,17 @@
 #pragma once
-#include <string_view>
 #include <iostream>
-#include "JsonSerializer.h"
+#include <string_view>
+#include "TypesParsing.h"
 
 
 namespace Parser
 {
 
 
-template <typename Type>
-void parse(std::string_view, size_t&, Type&)
-{
-    throw std::runtime_error{"If you're getting an error here it is because you need to "
-                             "use the JSON_PARSER macro in one of your classes!"};
-}
+void printPadding(int padding = 0);
 
-template <typename Type>
-void parse(std::string_view sv, Type& instance)
-{
-    size_t index = 0;
-    parse(sv, index, instance);
-}
 
+// From string
 void parseMember(const std::string_view name, const std::string_view msg, size_t& index, void* instance);
 
 template <typename T, typename MemberType, typename... Args>
@@ -30,17 +20,41 @@ void parseMember(const std::string_view name, const std::string_view msg, size_t
                  Args... args)
 {
     if (name == memberName)
-    {
-//        std::cout << "found: " << name << std::endl;
-
         return parse(msg, index, static_cast<T*>(instance)->*memberPointer);
-    }
 
     parseMember(name, msg, index, instance, args...);
 }
 
 void parseMessage(const std::string_view msg, size_t& index, void* instance,
                   void (*func)(const std::string_view, const std::string_view, size_t&, void*));
+
+
+// To string
+template <typename T>
+void toString(const T& value, int padding = 0)
+{
+    (void)padding;
+    std::cout << value << "," << std::endl;
+}
+
+template <>
+void toString(const std::string& value, int);
+
+template <typename T>
+void instanceToString(const T&, int)
+{
+}
+
+template <typename T, typename MemberType, typename... Args>
+void instanceToString(const T& member, int padding, const std::string_view memberName, MemberType T::*memberPointer, Args... args)
+{
+    printPadding(padding);
+
+    std::cout << memberName << ": ";
+    toString(member.*memberPointer, padding);
+
+    instanceToString(member, padding, args...);
+}
 
 
 }
@@ -63,4 +77,12 @@ void parseMessage(const std::string_view msg, size_t& index, void* instance,
                                                                    \
         parseMessage(sv, index, &member, setMemberValue);          \
     }                                                              \
-    JSON_SERIALIZER(Class, __VA_ARGS__)
+                                                                   \
+    template <>                                                    \
+    void Parser::toString(const Class& member, int padding)        \
+    {                                                              \
+        std::cout << "{" << std::endl;                             \
+        instanceToString(member, padding + 4, __VA_ARGS__);        \
+        printPadding(padding);                                     \
+        std::cout << "}" << std::endl;                             \
+    }

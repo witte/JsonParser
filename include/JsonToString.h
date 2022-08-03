@@ -36,7 +36,7 @@ void instanceToString(const T& member, int padding, const std::string_view membe
 }
 
 
-#define JSON_SERIALIZER(Class, ...)                             \
+#define JSON_TOSTRING(Class, ...)                             \
     template <>                                                 \
     void Parser::toString(const Class& member, int padding)     \
     {                                                           \

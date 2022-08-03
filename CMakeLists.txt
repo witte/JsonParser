@@ -17,8 +17,11 @@ add_compile_options(
 )
 
 
-add_library(JsonParser include/JsonSerializer.h
+add_library(JsonParser include/Tokens.h
+                       include/TypesParsing.h
                        include/JsonParser.h
+                       src/Tokens.cpp
+                       src/TypesParsing.cpp
                        src/JsonParser.cpp)
 target_include_directories(JsonParser PUBLIC include)
 
